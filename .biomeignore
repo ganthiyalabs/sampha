@@ -1,0 +1,3 @@
+# Ignore Tailwind CSS files with @theme directives
+apps/web/src/themes.css
+**/themes.css

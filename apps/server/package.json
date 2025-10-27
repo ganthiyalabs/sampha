@@ -1,0 +1,12 @@
+{
+  "name": "server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "go build -o ../../sampha ./cmd/api",
+    "dev": "go run ./cmd/api",
+    "test": "go test ./...",
+    "clean": "rm -f ../../sampha"
+  }
+}
+

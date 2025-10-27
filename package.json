@@ -1,0 +1,34 @@
+{
+  "name": "sampha",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "build:web": "turbo -F web build",
+    "build:server": "turbo -F server build",
+    "copy:assets": "turbo copy:assets",
+    "build:executable": "turbo build:executable",
+    "build:all": "turbo build:executable",
+    "build:sampha": "./scripts/build.sh",
+    "check-types": "turbo check-types",
+    "dev:native": "turbo -F native dev",
+    "dev:web": "turbo -F web dev",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format .",
+    "format:fix": "biome format --write .",
+    "check": "biome check .",
+    "check:fix": "biome check --write ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.5",
+    "turbo": "^2.5.4"
+  },
+  "packageManager": "bun@1.2.23"
+}
