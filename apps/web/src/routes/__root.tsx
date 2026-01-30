@@ -7,7 +7,6 @@ import { ConvexProvider } from "convex/react";
 
 import { Toaster } from "@/components/ui/sonner";
 
-import Header from "../components/header";
 import appCss from "../index.css?url";
 
 export interface RouterAppContext {
@@ -26,7 +25,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "My App",
+        title: "Sampha",
+      },
+      {
+        name: "description",
+        content: "A planning-first task system built for fast-moving individuals and teams.",
       },
     ],
     links: [
@@ -49,8 +52,7 @@ function RootDocument() {
           <HeadContent />
         </head>
         <body>
-          <div className="grid h-svh grid-rows-[auto_1fr]">
-            <Header />
+          <div className="grid h-svh grid-rows-[auto_1fr] bg-background">
             <Outlet />
           </div>
           <Toaster richColors />
