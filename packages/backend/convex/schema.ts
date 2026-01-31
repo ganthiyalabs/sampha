@@ -139,7 +139,8 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_user", ["userId"])
-    .index("by_user_unread", ["userId", "isRead"]),
+    .index("by_user_unread", ["userId", "isRead"])
+    .index("by_workspace", ["workspaceId"]),
 
   githubConnections: defineTable({
     workspaceId: v.id("workspaces"),

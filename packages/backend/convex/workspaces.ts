@@ -203,23 +203,25 @@ export const remove = mutation({
       .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
       .collect();
 
-    for (const project of projects) {
-      // Delete phases
-      const phases = await ctx.db
-        .query("phases")
-        .withIndex("by_project", (q) => q.eq("projectId", project._id))
-        .collect();
-      for (const phase of phases) {
-        await ctx.db.delete(phase._id);
-      }
-      
-      // Delete user workspace states related to this project
-      // Note: userWorkspaceStates are also deleted by workspaceId below, 
-      // but we might want to be thorough if they referenced specific projects.
-      // However, the schema deletion by workspaceId covers the main userWorkspaceState entries.
+    await Promise.all(
+      projects.map(async (project) => {
+        // Delete phases
+        const phases = await ctx.db
+          .query("phases")
+          .withIndex("by_project", (q) => q.eq("projectId", project._id))
+          .collect();
+        for (const phase of phases) {
+          await ctx.db.delete(phase._id);
+        }
 
-      await ctx.db.delete(project._id);
-    }
+        // Delete user workspace states related to this project
+        // Note: userWorkspaceStates are also deleted by workspaceId below,
+        // but we might want to be thorough if they referenced specific projects.
+        // However, the schema deletion by workspaceId covers the main userWorkspaceState entries.
+
+        await ctx.db.delete(project._id);
+      }),
+    );
     
     // 3. Delete tasks and their related data
     const tasks = await ctx.db
@@ -227,18 +229,20 @@ export const remove = mutation({
       .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
       .collect();
       
-    for (const task of tasks) {
+    await Promise.all(
+      tasks.map(async (task) => {
         // Delete subtasks
         const subtasks = await ctx.db
-            .query("subtasks")
-            .withIndex("by_task", (q) => q.eq("taskId", task._id))
-            .collect();
+          .query("subtasks")
+          .withIndex("by_task", (q) => q.eq("taskId", task._id))
+          .collect();
         for (const subtask of subtasks) {
-            await ctx.db.delete(subtask._id);
+          await ctx.db.delete(subtask._id);
         }
-        
+
         await ctx.db.delete(task._id);
-    }
+      }),
+    );
 
     // 4. Delete other direct children
     
@@ -271,16 +275,14 @@ export const remove = mutation({
     }
 
     // Notifications
-    // Notifications index is .index("by_user", ["userId"]) or .index("by_user_unread", ["userId", "isRead"]).
-    // It also has a workspaceId field but no index on it.
-    // Deleting notifications efficiently might be hard without an index.
-    // We can assume for now we skip or scan if small, but scanning is bad.
-    // Ideally we should add an index on workspaceId for notifications.
-    // For now, let's leave notifications as they might be user-centric. 
-    // But they have workspaceId, so they should be cleaned.
-    // Let's add an index to schema if possible, or just skip for now to avoid full table scan risk if table is huge.
-    // Actually, user said "prevent deletion ... or implement cascading delete".
-    // I will try to delete what I can efficiently.
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
+      .collect();
+
+    for (const notification of notifications) {
+      await ctx.db.delete(notification._id);
+    }
     
     // Github Connections
     const githubConnections = await ctx.db
