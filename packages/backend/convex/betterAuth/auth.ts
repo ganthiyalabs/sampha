@@ -17,26 +17,18 @@ export const authComponent = createClient<DataModel, typeof schema>(components.b
 // Better Auth Options
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
   const baseURL =
-    process.env.CONVEX_SITE_URL || process.env.SITE_URL || "https://intent-cobra-309.convex.site";
+    process.env.BETTER_AUTH_URL || process.env.SITE_URL || process.env.CONVEX_SITE_URL;
   const secret = process.env.BETTER_AUTH_SECRET;
-
-  // Always log initialization info to help debug deployment issues
-  console.log("Better Auth Config:", {
-    baseURL,
-    hasSecret: !!secret,
-    hasSiteUrl: !!process.env.CONVEX_SITE_URL,
-    deployment: process.env.CONVEX_DEPLOYMENT_NAME || "unknown",
-  });
 
   if (!secret) {
     console.error("BETTER_AUTH_SECRET is missing. Auth will not function correctly.");
   }
 
-  const trustedOrigins = ["http://localhost:3001", "https://sampha.ganthiyalabs.xyz"];
-
-  if (process.env.CONVEX_SITE_URL) {
-    trustedOrigins.push(process.env.CONVEX_SITE_URL);
-  }
+  const trustedOrigins = [
+    "http://localhost:3001",
+    "https://sampha.ganthiyalabs.xyz",
+    baseURL,
+  ].filter((origin): origin is string => origin !== undefined);
 
   return {
     appName: "Sampha",
