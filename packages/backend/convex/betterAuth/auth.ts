@@ -17,14 +17,16 @@ export const authComponent = createClient<DataModel, typeof schema>(components.b
 // Better Auth Options
 export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
   const baseURL =
-    process.env.CONVEX_SITE_URL || process.env.SITE_URL || "https://astute-turtle-662.convex.site";
+    process.env.CONVEX_SITE_URL || process.env.SITE_URL || "https://intent-cobra-309.convex.site";
   const secret = process.env.BETTER_AUTH_SECRET;
 
-  if (process.env.CONVEX_SCHEMA) {
-    console.log("Initializing Better Auth with baseURL:", baseURL);
-    console.log("BETTER_AUTH_SECRET present:", !!secret);
-    console.log("CONVEX_SITE_URL:", process.env.CONVEX_SITE_URL);
-  }
+  // Always log initialization info to help debug deployment issues
+  console.log("Better Auth Config:", {
+    baseURL,
+    hasSecret: !!secret,
+    hasSiteUrl: !!process.env.CONVEX_SITE_URL,
+    deployment: process.env.CONVEX_DEPLOYMENT_NAME || "unknown",
+  });
 
   if (!secret) {
     console.error("BETTER_AUTH_SECRET is missing. Auth will not function correctly.");
@@ -43,6 +45,12 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     database: authComponent.adapter(ctx),
     emailAndPassword: {
       enabled: true,
+    },
+    socialProviders: {
+      github: {
+        clientId: process.env.GITHUB_CLIENT_ID!,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      },
     },
     trustedOrigins,
     plugins: [convex({ authConfig })],
