@@ -10,6 +10,8 @@
 
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
+import type * as notifications from "../notifications.js";
+import type * as workspaces from "../workspaces.js";
 
 import type {
   ApiFromModules,
@@ -20,6 +22,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   healthCheck: typeof healthCheck;
   http: typeof http;
+  notifications: typeof notifications;
+  workspaces: typeof workspaces;
 }>;
 
 /**

@@ -1,5 +1,7 @@
 import * as React from "react";
 import { Link, useLocation, useParams } from "@tanstack/react-router";
+import { useQuery } from "convex/react";
+import { api } from "@sampha/backend/convex/_generated/api";
 import {
   ChevronsLeft,
   ChevronsRight,
@@ -33,6 +35,8 @@ export function FloatingNav() {
   const location = useLocation();
 
   const { data: session, isPending } = authClient.useSession();
+  const workspaces = useQuery(api.workspaces.list);
+  const unreadCount = useQuery(api.notifications.getUnreadCount);
 
   const navItems: NavItem[] = [
     {
@@ -49,7 +53,7 @@ export function FloatingNav() {
       title: "Inbox",
       href: `/${workspace}/inbox`,
       icon: Inbox,
-      badge: 3, // Mock badge
+      badge: unreadCount ?? undefined,
     },
     {
       title: "Projects",
@@ -83,7 +87,11 @@ export function FloatingNav() {
         style={{ height: "fit-content", maxHeight: "calc(100vh - 32px)" }}
       >
         {/* Workspace Switcher */}
-        <WorkspaceSwitcher isExpanded={isExpanded} workspaceName={workspace} />
+        <WorkspaceSwitcher
+          isExpanded={isExpanded}
+          workspaceName={workspace}
+          workspaces={workspaces}
+        />
 
         {/* Navigation Items */}
         <nav className={cn("flex flex-col gap-1 mt-2", isExpanded ? "w-full" : "items-center")}>
@@ -275,9 +283,11 @@ export function FloatingNav() {
 function WorkspaceSwitcher({
   isExpanded,
   workspaceName,
+  workspaces,
 }: {
   isExpanded: boolean;
   workspaceName: string;
+  workspaces?: { name: string; slug: string }[] | null;
 }) {
   return (
     <Popover>
@@ -310,11 +320,12 @@ function WorkspaceSwitcher({
       >
         <div className="mb-2 px-2 text-xs font-medium text-muted-foreground">Switch Workspace</div>
         <div className="flex flex-col gap-1">
-          {["Ganthiya Labs", "Personal", "Community"].map((ws) => {
-            const slug = ws.toLowerCase().replace(/\s+/g, "-");
+          {workspaces?.map((ws) => {
+            const slug = ws.slug;
+            const workspaceName = ws.name;
             return (
               <Button
-                key={ws}
+                key={slug}
                 variant="ghost"
                 className="justify-start gap-2 h-9 px-2 text-sm"
                 asChild
@@ -322,10 +333,10 @@ function WorkspaceSwitcher({
                 <Link to={`/${slug}/timeline`} params={{ workspace: slug }}>
                   <Avatar className="h-5 w-5 rounded-md">
                     <AvatarFallback className="rounded-md text-[10px]">
-                      {ws.substring(0, 2).toUpperCase()}
+                      {workspaceName.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
-                  {ws}
+                  {workspaceName}
                 </Link>
               </Button>
             );
