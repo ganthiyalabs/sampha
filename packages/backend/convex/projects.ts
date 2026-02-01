@@ -112,9 +112,6 @@ export const archive = mutation({
   },
 });
 
-/**
- * Delete a project permanently.
- */
 export const remove = mutation({
   args: {
     projectId: v.id("projects"),

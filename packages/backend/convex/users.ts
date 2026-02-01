@@ -36,7 +36,7 @@ export const list = query({
   handler: async (ctx) => {
     return await ctx.db
       .query("users")
-      .withIndex("by_isDeleted", (q) => q.eq("isDeleted", false))
+      .filter((q) => q.neq(q.field("isDeleted"), true))
       .collect();
   },
 });
@@ -109,5 +109,23 @@ export const remove = mutation({
     const userId = await getAppUserId(ctx);
     await ctx.db.patch(userId, { isDeleted: true });
     return userId;
+  },
+});
+
+/**
+ * Backfill mutation to ensure all users have the isDeleted field set.
+ * This is useful for normalizing data after the schema change.
+ */
+export const backfillIsDeleted = mutation({
+  handler: async (ctx) => {
+    const users = await ctx.db.query("users").collect();
+    let updatedCount = 0;
+    for (const user of users) {
+      if (user.isDeleted === undefined) {
+        await ctx.db.patch(user._id, { isDeleted: false });
+        updatedCount++;
+      }
+    }
+    return { updatedCount, totalCount: users.length };
   },
 });

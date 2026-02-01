@@ -208,37 +208,8 @@ export const remove = mutation({
       projects.map((project) => deleteProject(ctx, project._id))
     );
     
-    // 3. Delete other direct children that might not be project-specific
-    // (Though most are deleted by deleteProject above, these serve as a catch-all)
+    // 3. Delete other direct children that are workspace-level entities
     
-    // Task Dependencies
-    const taskDependencies = await ctx.db
-        .query("taskDependencies")
-        .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
-        .collect();
-    await Promise.all(
-      taskDependencies.map((dep) => ctx.db.delete(dep._id)),
-    );
-
-
-    // Comments
-    const comments = await ctx.db
-        .query("comments")
-        .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
-        .collect();
-    await Promise.all(
-      comments.map((comment) => ctx.db.delete(comment._id)),
-    );
-
-    // Activities
-    const activities = await ctx.db
-        .query("activities")
-        .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
-        .collect();
-    await Promise.all(
-      activities.map((activity) => ctx.db.delete(activity._id)),
-    );
-
     // Notifications
     const notifications = await ctx.db
       .query("notifications")
@@ -258,25 +229,6 @@ export const remove = mutation({
       githubConnections.map((conn) => ctx.db.delete(conn._id)),
     );
     
-    // Github Links
-    const githubLinks = await ctx.db
-        .query("githubLinks")
-        .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
-        .collect();
-    await Promise.all(
-      githubLinks.map(async (link) => {
-        // Delete external comments
-        const externalComments = await ctx.db
-          .query("externalComments")
-          .withIndex("by_github_link", (q) => q.eq("githubLinkId", link._id))
-          .collect();
-        await Promise.all(
-          externalComments.map((comment) => ctx.db.delete(comment._id)),
-        );
-        await ctx.db.delete(link._id);
-      }),
-    );
-
     // Status Configs
     const statusConfigs = await ctx.db
         .query("statusConfigs")
