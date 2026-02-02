@@ -54,8 +54,9 @@ export async function getAppUserId(ctx: QueryCtx | MutationCtx) {
 
   const user = await ctx.db
     .query("users")
-    .withIndex("by_email", (q) => q.eq("email", authUser.email))
-    .unique();
+    .withIndex("by_email_active", (q) => q.eq("email", authUser.email).eq("isDeleted", false))
+    .order("desc") // Most recent first
+    .first();
 
   if (!user) {
     throw new Error("User not found in app database. Please sync your account.");

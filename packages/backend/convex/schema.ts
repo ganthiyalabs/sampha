@@ -28,6 +28,7 @@ export default defineSchema({
     isDeleted: v.optional(v.boolean()),
   })
     .index("by_email", ["email"])
+    .index("by_email_active", ["email", "isDeleted"])
     .index("by_isDeleted", ["isDeleted"]),
 
   userPreferences: defineTable({
