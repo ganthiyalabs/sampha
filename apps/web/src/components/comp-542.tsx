@@ -1,15 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { addDays, setHours, setMinutes, subDays } from "date-fns";
 import { useState } from "react";
 
-import {
-  type CalendarEvent,
-  EventCalendar,
-} from "@/components";
-
-export const Route = createFileRoute("/$workspace/calendar")({
-  component: WorkspaceCalendar,
-});
+import { EventCalendar } from "./event-calendar";
+import type { CalendarEvent } from "./types";
 
 // Sample events data with hardcoded times
 const sampleEvents: CalendarEvent[] = [
@@ -135,7 +130,7 @@ const sampleEvents: CalendarEvent[] = [
   },
 ];
 
-function WorkspaceCalendar() {
+export default function Component() {
   const [events, setEvents] = useState<CalendarEvent[]>(sampleEvents);
 
   const handleEventAdd = (event: CalendarEvent) => {
@@ -155,13 +150,11 @@ function WorkspaceCalendar() {
   };
 
   return (
-    <div className="p-6 h-full">
-      <EventCalendar
-        events={events}
-        onEventAdd={handleEventAdd}
-        onEventDelete={handleEventDelete}
-        onEventUpdate={handleEventUpdate}
-      />
-    </div>
+    <EventCalendar
+      events={events}
+      onEventAdd={handleEventAdd}
+      onEventDelete={handleEventDelete}
+      onEventUpdate={handleEventUpdate}
+    />
   );
 }
