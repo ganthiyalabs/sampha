@@ -7,6 +7,18 @@ import { authComponent, createAuth } from "../betterAuth/auth";
  * Throws an error if the user is not authenticated.
  */
 export async function getAuthUser(ctx: QueryCtx | MutationCtx) {
+  // Try native Convex Auth first (recommended)
+  const identity = await ctx.auth.getUserIdentity();
+  if (identity) {
+    return {
+      id: identity.subject,
+      name: identity.name || identity.email || "User",
+      email: identity.email!,
+      image: identity.pictureUrl,
+    };
+  }
+
+  // Fallback to manual Better Auth call (only if native auth fails/is missing)
   const { auth } = await authComponent.getAuth(createAuth, ctx);
   const session = await auth.api.getSession({
     headers: new Headers(),
