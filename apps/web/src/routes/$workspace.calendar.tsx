@@ -110,7 +110,7 @@ function WorkspaceCalendar() {
   }
 
   return (
-    <div className="p-6 h-full">
+    <div className="h-full">
       <EventCalendar
         events={events}
         onEventAdd={handleEventAdd}
