@@ -26,7 +26,7 @@ import { DayView } from "./day-view";
 import { EventDialog } from "./event-dialog";
 import { MonthView } from "./month-view";
 import type { CalendarEvent, CalendarView } from "./types";
-import { addHoursToDate } from "./utils";
+import { addHoursToDate, snapTo15Minutes } from "./utils";
 import { WeekView } from "./week-view";
 
 import { cn } from "@/lib/utils";
@@ -131,34 +131,20 @@ export function EventCalendar({
   };
 
   const handleEventSelect = (event: CalendarEvent) => {
-    console.log("Event selected:", event); // Debug log
     setSelectedEvent(event);
     setIsEventDialogOpen(true);
   };
 
   const handleEventCreate = (startTime: Date) => {
-    console.log("Creating new event at:", startTime); // Debug log
 
     // Snap to 15-minute intervals
-    const minutes = startTime.getMinutes();
-    const remainder = minutes % 15;
-    if (remainder !== 0) {
-      if (remainder < 7.5) {
-        // Round down to nearest 15 min
-        startTime.setMinutes(minutes - remainder);
-      } else {
-        // Round up to nearest 15 min
-        startTime.setMinutes(minutes + (15 - remainder));
-      }
-      startTime.setSeconds(0);
-      startTime.setMilliseconds(0);
-    }
+    const startTimeSnapped = snapTo15Minutes(startTime);
 
     const newEvent: CalendarEvent = {
       allDay: false,
-      end: addHoursToDate(startTime, 1),
+      end: addHoursToDate(startTimeSnapped, 1),
       id: "",
-      start: startTime,
+      start: startTimeSnapped,
       title: "",
       status: "todo",
     };

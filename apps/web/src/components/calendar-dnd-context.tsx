@@ -25,6 +25,7 @@ import {
 
 import { EventItem } from "./event-item";
 import type { CalendarEvent } from "./types";
+import { getSnappedMinutesFromFraction } from "./utils";
 
 
 // Define the context type
@@ -177,15 +178,8 @@ export function CalendarDndProvider({
 
         // Calculate hours and minutes with 15-minute precision
         const hours = Math.floor(time);
-        const fractionalHour = time - hours;
-
         // Map to nearest 15 minute interval (0, 0.25, 0.5, 0.75)
-        let minutes = 0;
-        if (fractionalHour < 0.125) minutes = 0;
-        else if (fractionalHour < 0.375) minutes = 15;
-        else if (fractionalHour < 0.625) minutes = 30;
-        else minutes = 45;
-
+        const minutes = getSnappedMinutesFromFraction(time - hours);
         newTime.setHours(hours, minutes, 0, 0);
 
         // Only update if time has changed
@@ -229,15 +223,6 @@ export function CalendarDndProvider({
 
     // Add robust error checking
     if (!over || !activeEvent || !currentTime) {
-      // Reset state and exit early
-      setActiveEvent(null);
-      setActiveId(null);
-      setActiveView(null);
-      setCurrentTime(null);
-      setEventHeight(null);
-      setIsMultiDay(false);
-      setMultiDayWidth(null);
-      setDragHandlePosition(null);
       return;
     }
 
@@ -268,15 +253,7 @@ export function CalendarDndProvider({
       // If time is provided (for week/day views), set the hours and minutes
       if (time !== undefined) {
         const hours = Math.floor(time);
-        const fractionalHour = time - hours;
-
-        // Map to nearest 15 minute interval (0, 0.25, 0.5, 0.75)
-        let minutes = 0;
-        if (fractionalHour < 0.125) minutes = 0;
-        else if (fractionalHour < 0.375) minutes = 15;
-        else if (fractionalHour < 0.625) minutes = 30;
-        else minutes = 45;
-
+        const minutes = getSnappedMinutesFromFraction(time - hours);
         newStart.setHours(hours, minutes, 0, 0);
       } else {
         // For month view, preserve the original time from currentTime

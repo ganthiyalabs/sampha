@@ -334,7 +334,6 @@ function WorkspaceSwitcher({
   };
 
   const handleCreateWorkspace = async () => {
-    console.log("Attempting to create workspace:", { newWorkspaceName, newWorkspaceSlug });
     if (!newWorkspaceName || !newWorkspaceSlug) {
       toast.error("Please enter both a name and a slug.");
       return;
@@ -345,7 +344,6 @@ function WorkspaceSwitcher({
         slug: newWorkspaceSlug,
         type: "private",
       });
-      console.log("Workspace created successfully");
       toast.success("Workspace created successfully!");
       setIsCreateDialogOpen(false);
       setIsPopoverOpen(false);

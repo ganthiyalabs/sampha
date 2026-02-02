@@ -154,3 +154,33 @@ export function addHoursToDate(date: Date, hours: number): Date {
   result.setHours(result.getHours() + hours);
   return result;
 }
+
+/**
+ * Snap a date to the nearest 15-minute interval
+ */
+export function snapTo15Minutes(date: Date): Date {
+  const result = new Date(date);
+  const minutes = result.getMinutes();
+  const remainder = minutes % 15;
+
+  if (remainder !== 0) {
+    if (remainder < 7.5) {
+      result.setMinutes(minutes - remainder);
+    } else {
+      result.setMinutes(minutes + (15 - remainder));
+    }
+  }
+
+  result.setSeconds(0, 0);
+  return result;
+}
+
+/**
+ * Get the nearest 15-minute interval from a fractional hour (0.0 to 1.0)
+ */
+export function getSnappedMinutesFromFraction(fractionalHour: number): number {
+  if (fractionalHour < 0.125) return 0;
+  if (fractionalHour < 0.375) return 15;
+  if (fractionalHour < 0.625) return 30;
+  return 45;
+}

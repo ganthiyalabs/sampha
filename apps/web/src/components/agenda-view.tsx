@@ -22,22 +22,30 @@ export function AgendaView({
 }: AgendaViewProps) {
   // Show events for the next days based on constant
   const days = useMemo(() => {
-    console.log("Agenda view updating with date:", currentDate.toISOString());
     return Array.from({ length: AgendaDaysToShow }, (_, i) =>
       addDays(new Date(currentDate), i),
     );
   }, [currentDate]);
 
+  // Pre-calculate and memoize events for each day to avoid O(days * events) in render
+  const eventsByDay = useMemo(() => {
+    return days.map((day) => ({
+      day,
+      id: day.toString(),
+      events: getAgendaEventsForDay(events, day),
+    }));
+  }, [days, events]);
+ 
+  // Check if there are any days with events
+  const hasEvents = useMemo(
+    () => eventsByDay.some((d) => d.events.length > 0),
+    [eventsByDay],
+  );
+
   const handleEventClick = (event: CalendarEvent, e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("Agenda view event clicked:", event);
     onEventSelect(event);
   };
-
-  // Check if there are any days with events
-  const hasEvents = days.some(
-    (day) => getAgendaEventsForDay(events, day).length > 0,
-  );
 
   return (
     <div className="border-border/70 border-t px-4">
@@ -53,15 +61,13 @@ export function AgendaView({
           </p>
         </div>
       ) : (
-        days.map((day) => {
-          const dayEvents = getAgendaEventsForDay(events, day);
-
+        eventsByDay.map(({ day, id, events: dayEvents }) => {
           if (dayEvents.length === 0) return null;
 
           return (
             <div
               className="relative my-12 border-border/70 border-t"
-              key={day.toString()}
+              key={id}
             >
               <span
                 className="-top-3 absolute left-0 flex h-6 items-center bg-background pe-4 text-[10px] uppercase data-today:font-medium sm:pe-4 sm:text-xs"
