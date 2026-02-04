@@ -63,6 +63,10 @@ export function EventCalendar({
     null,
   );
 
+  useEffect(() => {
+    setView(initialView);
+  }, [initialView]);
+
   // Add keyboard shortcuts for view switching
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

@@ -11,7 +11,6 @@ import {
   Settings,
   Layers,
   Clock,
-  Command,
   Plus,
 } from "lucide-react";
 
@@ -155,30 +154,6 @@ export function FloatingNav() {
               </Tooltip>
             );
           })}
-
-          {/* Cmd+K Button - styled like other nav items */}
-          <Tooltip disableHoverableContent={true}>
-            <TooltipTrigger asChild>
-              <button
-                className={cn(
-                  "group flex items-center gap-3 rounded-lg px-2 py-1 text-sm font-medium transition-colors hover:bg-accent/50 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring w-full",
-                  !isExpanded && "justify-center px-0 w-9 h-9",
-                  "text-muted-foreground",
-                )}
-                // onClick={() => toggleCommandPalette()} // Add your command palette toggle logic here
-              >
-                <Command
-                  className={cn("shrink-0 transition-all", isExpanded ? "h-4 w-4" : "h-5 w-5")}
-                />
-                {isExpanded && (
-                  <span className="flex-1 text-left truncate transition-all duration-300 animate-in fade-in slide-in-from-left-2">
-                    Cmd+K
-                  </span>
-                )}
-              </button>
-            </TooltipTrigger>
-            {!isExpanded && <TooltipContent side="right">Command Menu</TooltipContent>}
-          </Tooltip>
         </nav>
 
         {/* Spacer to push user profile to bottom */}

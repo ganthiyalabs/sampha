@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   EndHour,
   StartHour,
-} from "@/components/constants";
+} from "@/components/calendar/constants";
 
 export function useCurrentTimeIndicator(
   currentDate: Date,

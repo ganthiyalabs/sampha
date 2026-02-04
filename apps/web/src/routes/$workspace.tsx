@@ -9,6 +9,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { SearchTrigger } from "@/components/layout/search-trigger";
+import { SearchCommand } from "@/components/search-command";
 
 export const Route = createFileRoute("/$workspace")({
   component: WorkspaceLayout,
@@ -17,6 +19,7 @@ export const Route = createFileRoute("/$workspace")({
 function WorkspaceLayout() {
   const { workspace } = Route.useParams();
   const location = useLocation();
+  const [isCommandOpen, setIsCommandOpen] = React.useState(false);
 
   // Simple Breadcrumb Logic
   // pathSegments: ["timeline"] or ["projects", "projectc-1", "timeline"]
@@ -32,11 +35,11 @@ function WorkspaceLayout() {
 
       <main className="min-h-screen w-full p-6 pl-[88px] transition-[padding] duration-300 ease-in-out">
         <header className="mb-4 flex items-center h-14">
-          <Breadcrumb className="w-full border p-4 rounded-2xl">
+          <Breadcrumb className="w-full border p-4 rounded-2xl flex items-center justify-between">
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to={`/${workspace}`} className="flex items-center gap-2">
+                  <Link to="/$workspace" params={{ workspace }} className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-primary" />
                     {workspace}
                   </Link>
@@ -59,7 +62,7 @@ function WorkspaceLayout() {
                         </BreadcrumbPage>
                       ) : (
                         <BreadcrumbLink asChild>
-                          <Link to={path} className="capitalize">
+                          <Link to={path as any} className="capitalize">
                             {segment.replace(/-/g, " ")}
                           </Link>
                         </BreadcrumbLink>
@@ -69,6 +72,9 @@ function WorkspaceLayout() {
                 );
               })}
             </BreadcrumbList>
+            <div className="ml-auto">
+              <SearchTrigger onClick={() => setIsCommandOpen(true)} />
+            </div>
           </Breadcrumb>
         </header>
 
@@ -76,6 +82,7 @@ function WorkspaceLayout() {
           <Outlet />
         </div>
       </main>
+      <SearchCommand open={isCommandOpen} setOpen={setIsCommandOpen} workspace={workspace} />
     </div>
   );
 }
