@@ -55,6 +55,13 @@ export function SearchCommand({
     return () => document.removeEventListener("keydown", down)
   }, [setOpen])
 
+  const calendarViews = [
+    { value: "month", label: "Month", shortcut: "M" },
+    { value: "week", label: "Week", shortcut: "W" },
+    { value: "day", label: "Day", shortcut: "D" },
+    { value: "agenda", label: "Agenda", shortcut: "A" },
+  ] as const
+
   const runCommand = React.useCallback((command: () => unknown) => {
     setOpen(false)
     command()
@@ -66,26 +73,21 @@ export function SearchCommand({
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
         <CommandGroup heading="Calendar">
-            <CommandItem key="month" value="month" onSelect={() => runCommand(() => navigate({ to: "/$workspace/calendar", params: { workspace }, search: { view: "month" } }))}>
-                <Calendar />
-                <span>Month</span>
-                <CommandShortcut>M</CommandShortcut>
+          {calendarViews.map((view) => (
+            <CommandItem 
+              key={view.value} 
+              value={view.value} 
+              onSelect={() => runCommand(() => navigate({ 
+                to: "/$workspace/calendar", 
+                params: { workspace }, 
+                search: { view: view.value } 
+              }))}
+            >
+              <Calendar />
+              <span>{view.label}</span>
+              <CommandShortcut>{view.shortcut}</CommandShortcut>
             </CommandItem>
-            <CommandItem key="week" value="week" onSelect={() => runCommand(() => navigate({ to: "/$workspace/calendar", params: { workspace }, search: { view: "week" } }))}>
-                <Calendar />
-                <span>Week</span>
-                <CommandShortcut>W</CommandShortcut>
-            </CommandItem>
-            <CommandItem key="day" value="day" onSelect={() => runCommand(() => navigate({ to: "/$workspace/calendar", params: { workspace }, search: { view: "day" } }))}>
-                <Calendar />
-                <span>Day</span>
-                <CommandShortcut>D</CommandShortcut>
-            </CommandItem>
-            <CommandItem key="agenda" value="agenda" onSelect={() => runCommand(() => navigate({ to: "/$workspace/calendar", params: { workspace }, search: { view: "agenda" } }))}>
-                <Calendar />
-                <span>Agenda</span>
-                <CommandShortcut>A</CommandShortcut>
-            </CommandItem>
+          ))}
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Settings">
