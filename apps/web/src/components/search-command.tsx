@@ -32,7 +32,22 @@ export function SearchCommand({
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      // Check if user is typing in an input field
+      const target = e.target as HTMLElement
+      const isTyping = 
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+
+      // Open with Cmd+K or Ctrl+K (original shortcut)
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setOpen(true)
+        return
+      }
+
+      // Open with just "K" key (new shortcut) - but not when typing
+      if (e.key === "k" && !isTyping && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
         e.preventDefault()
         setOpen(true)
       }
