@@ -15,18 +15,18 @@ import {
   CommandShortcut,
   CommandSeparator,
 } from "@/components/ui/command"
-import { useNavigate, useParams } from "@tanstack/react-router"
+import { useNavigate } from "@tanstack/react-router"
 
 export function SearchCommand({
   open,
   setOpen,
+  workspace,
 }: {
   open: boolean
   setOpen: (open: boolean) => void
+  workspace: string
 }) {
   const navigate = useNavigate()
-  const params = useParams({ strict: false }) as { workspace?: string }
-  const workspace = params.workspace || "default"
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {

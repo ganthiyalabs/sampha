@@ -39,7 +39,7 @@ function WorkspaceLayout() {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to={`/${workspace}`} className="flex items-center gap-2">
+                  <Link to="/$workspace" params={{ workspace }} className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-primary" />
                     {workspace}
                   </Link>
@@ -62,7 +62,7 @@ function WorkspaceLayout() {
                         </BreadcrumbPage>
                       ) : (
                         <BreadcrumbLink asChild>
-                          <Link to={path} className="capitalize">
+                          <Link to={path as any} className="capitalize">
                             {segment.replace(/-/g, " ")}
                           </Link>
                         </BreadcrumbLink>
@@ -82,7 +82,7 @@ function WorkspaceLayout() {
           <Outlet />
         </div>
       </main>
-      <SearchCommand open={isCommandOpen} setOpen={setIsCommandOpen} />
+      <SearchCommand open={isCommandOpen} setOpen={setIsCommandOpen} workspace={workspace} />
     </div>
   );
 }
