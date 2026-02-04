@@ -1,11 +1,9 @@
 import * as React from "react"
 import {
   Calendar,
-  CreditCard,
   Settings,
-  User,
 } from "lucide-react"
-import { toast } from "sonner"
+
 
 import {
   CommandDialog,
@@ -91,20 +89,10 @@ export function SearchCommand({
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Settings">
-          <CommandItem key="profile" value="profile" onSelect={() => runCommand(() => toast.success("Go to Profile"))}>
-            <User />
-            <span>Profile</span>
-            <CommandShortcut>⌘P</CommandShortcut>
-          </CommandItem>
-          <CommandItem key="billing" value="billing" onSelect={() => runCommand(() => toast.success("Go to Billing"))}>
-            <CreditCard />
-            <span>Billing</span>
-            <CommandShortcut>⌘B</CommandShortcut>
-          </CommandItem>
           <CommandItem key="settings" value="settings" onSelect={() => runCommand(() => navigate({ to: "/$workspace/settings", params: { workspace } }))}>
             <Settings />
             <span>Settings</span>
-            <CommandShortcut>⌘S</CommandShortcut>
+            <CommandShortcut>S</CommandShortcut>
           </CommandItem>
         </CommandGroup>
       </CommandList>
