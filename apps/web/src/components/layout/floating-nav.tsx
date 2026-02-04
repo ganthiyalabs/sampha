@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SearchCommand } from "@/components/search-command";
 
 interface NavItem {
   title: string;
@@ -41,6 +42,7 @@ interface NavItem {
 
 export function FloatingNav() {
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const [isCommandOpen, setIsCommandOpen] = React.useState(false);
   const params = useParams({ from: "/$workspace" }) as { workspace: string };
   const workspace = params.workspace || "default";
   const location = useLocation();
@@ -165,7 +167,7 @@ export function FloatingNav() {
                   !isExpanded && "justify-center px-0 w-9 h-9",
                   "text-muted-foreground",
                 )}
-                // onClick={() => toggleCommandPalette()} // Add your command palette toggle logic here
+                onClick={() => setIsCommandOpen(true)}
               >
                 <Command
                   className={cn("shrink-0 transition-all", isExpanded ? "h-4 w-4" : "h-5 w-5")}
@@ -290,6 +292,7 @@ export function FloatingNav() {
           </Button>
         </div>
       </aside>
+      <SearchCommand open={isCommandOpen} setOpen={setIsCommandOpen} />
     </TooltipProvider>
   );
 }

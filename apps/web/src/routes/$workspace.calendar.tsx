@@ -12,9 +12,15 @@ import {
 
 export const Route = createFileRoute("/$workspace/calendar")({
   component: WorkspaceCalendar,
+  validateSearch: (search: Record<string, unknown>): { view?: string } => {
+    return {
+      view: typeof search.view === 'string' ? search.view : undefined
+    }
+  },
 });
 
 function WorkspaceCalendar() {
+  const { view } = Route.useSearch();
   const { workspace: slug } = useParams({ from: "/$workspace/calendar" });
   
   // Fetch workspace by slug
@@ -109,6 +115,7 @@ function WorkspaceCalendar() {
     return <div className="p-6 text-muted-foreground italic">Loading workspace...</div>;
   }
 
+
   return (
     <div className="h-full">
       <EventCalendar
@@ -116,6 +123,7 @@ function WorkspaceCalendar() {
         onEventAdd={handleEventAdd}
         onEventDelete={handleEventDelete}
         onEventUpdate={handleEventUpdate}
+        initialView={view as any}
       />
     </div>
   );
