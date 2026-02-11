@@ -81,6 +81,37 @@ export const syncFromAuth = mutation({
       createdAt: Date.now(),
     });
 
+    // AUTO-CREATE "Personal" Workspace for new users
+    const workspaceId = await ctx.db.insert("workspaces", {
+      name: "Personal",
+      slug: `personal-${userId.slice(0, 8)}`,
+      type: "private",
+      createdAt: Date.now(),
+      createdBy: userId,
+    });
+
+    await ctx.db.insert("workspaceMembers", {
+      workspaceId,
+      userId,
+      role: "admin",
+      joinedAt: Date.now(),
+    });
+
+    // Create a default project and phase so they can start immediately
+    const projectId = await ctx.db.insert("projects", {
+      workspaceId,
+      name: "General Project",
+      status: "active",
+      createdAt: Date.now(),
+      createdBy: userId,
+    });
+
+    await ctx.db.insert("phases", {
+      projectId,
+      name: "General",
+      order: 0,
+    });
+
     return userId;
   },
 });

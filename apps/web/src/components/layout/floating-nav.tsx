@@ -40,7 +40,7 @@ interface NavItem {
 
 export function FloatingNav() {
   const [isExpanded, setIsExpanded] = React.useState(false);
-  const params = useParams({ from: "/$workspace" }) as { workspace: string };
+  const params = useParams({ strict: false }) as { workspace?: string };
   const workspace = params.workspace || "default";
   const location = useLocation();
 
@@ -52,7 +52,7 @@ export function FloatingNav() {
   // Auto-sync user data when session is active
   React.useEffect(() => {
     if (session) {
-      syncUser().catch(err => console.error("Failed to sync user:", err));
+      syncUser().catch((err) => console.error("Failed to sync user:", err));
     }
   }, [session, syncUser]);
 
@@ -108,7 +108,7 @@ export function FloatingNav() {
         <WorkspaceSwitcher
           isExpanded={isExpanded}
           workspaceName={workspace}
-          workspaces={workspaces}
+          workspaces={workspaces?.filter((w): w is NonNullable<typeof w> => w !== null)}
           isAuthenticated={!!session}
         />
 
@@ -129,7 +129,10 @@ export function FloatingNav() {
                   >
                     <div className="relative flex items-center justify-center">
                       <item.icon
-                        className={cn("shrink-0 transition-all", isExpanded ? "h-4 w-4" : "h-5 w-5")}
+                        className={cn(
+                          "shrink-0 transition-all",
+                          isExpanded ? "h-4 w-4" : "h-5 w-5",
+                        )}
                       />
                       {!!item.badge && (
                         <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2 rounded-full bg-primary border border-background shadow-sm" />
@@ -325,7 +328,7 @@ function WorkspaceSwitcher({
         ? "Your session has expired. Signing you out..."
         : error.message || "Failed to create workspace. Please try again.";
       toast.error(errorMessage);
-      
+
       if (error.message.includes("Unauthenticated")) {
         await authClient.signOut();
         window.location.reload(); // Reload to refresh state completely
@@ -341,7 +344,9 @@ function WorkspaceSwitcher({
             variant="ghost"
             className={cn(
               "h-auto p-1.5 hover:bg-accent hover:text-accent-foreground",
-              isExpanded ? "justify-start w-full gap-3 px-2" : "justify-center w-10 h-10 rounded-xl",
+              isExpanded
+                ? "justify-start w-full gap-3 px-2"
+                : "justify-center w-10 h-10 rounded-xl",
             )}
           >
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground font-bold text-xs uppercase shadow-sm">
@@ -363,7 +368,9 @@ function WorkspaceSwitcher({
           align={isExpanded ? "start" : "start"}
           side={isExpanded ? "bottom" : "right"}
         >
-          <div className="mb-2 px-2 text-xs font-medium text-muted-foreground">Switch Workspace</div>
+          <div className="mb-2 px-2 text-xs font-medium text-muted-foreground">
+            Switch Workspace
+          </div>
           <div className="flex flex-col gap-1">
             {workspaces?.map((ws) => {
               const slug = ws.slug;

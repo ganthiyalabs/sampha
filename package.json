@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@sampha/env": "workspace:*",
+    "chrono-node": "^2.9.0",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },
