@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as WorkspaceRouteImport } from './routes/$workspace'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkspaceIndexRouteImport } from './routes/$workspace.index'
@@ -24,6 +25,11 @@ import { Route as WorkspaceProjectsProjectIdTasksRouteImport } from './routes/$w
 import { Route as WorkspaceProjectsProjectIdSettingsRouteImport } from './routes/$workspace.projects.$projectId.settings'
 import { Route as WorkspaceProjectsProjectIdKanbanRouteImport } from './routes/$workspace.projects.$projectId.kanban'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkspaceRoute = WorkspaceRouteImport.update({
   id: '/$workspace',
   path: '/$workspace',
@@ -104,6 +110,7 @@ const WorkspaceProjectsProjectIdKanbanRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$workspace': typeof WorkspaceRouteWithChildren
+  '/login': typeof LoginRoute
   '/$workspace/calendar': typeof WorkspaceCalendarRoute
   '/$workspace/inbox': typeof WorkspaceInboxRoute
   '/$workspace/settings': typeof WorkspaceSettingsRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/$workspace/calendar': typeof WorkspaceCalendarRoute
   '/$workspace/inbox': typeof WorkspaceInboxRoute
   '/$workspace/settings': typeof WorkspaceSettingsRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$workspace': typeof WorkspaceRouteWithChildren
+  '/login': typeof LoginRoute
   '/$workspace/calendar': typeof WorkspaceCalendarRoute
   '/$workspace/inbox': typeof WorkspaceInboxRoute
   '/$workspace/settings': typeof WorkspaceSettingsRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$workspace'
+    | '/login'
     | '/$workspace/calendar'
     | '/$workspace/inbox'
     | '/$workspace/settings'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
     | '/$workspace/calendar'
     | '/$workspace/inbox'
     | '/$workspace/settings'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$workspace'
+    | '/login'
     | '/$workspace/calendar'
     | '/$workspace/inbox'
     | '/$workspace/settings'
@@ -200,10 +212,18 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   WorkspaceRoute: typeof WorkspaceRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$workspace': {
       id: '/$workspace'
       path: '/$workspace'
@@ -357,6 +377,7 @@ const WorkspaceRouteWithChildren = WorkspaceRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   WorkspaceRoute: WorkspaceRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

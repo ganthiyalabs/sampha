@@ -13,7 +13,9 @@ import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_deletion from "../lib/deletion.js";
 import type * as notifications from "../notifications.js";
+import type * as phases from "../phases.js";
 import type * as projects from "../projects.js";
+import type * as tasks from "../tasks.js";
 import type * as users from "../users.js";
 import type * as workspaces from "../workspaces.js";
 
@@ -29,7 +31,9 @@ declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/deletion": typeof lib_deletion;
   notifications: typeof notifications;
+  phases: typeof phases;
   projects: typeof projects;
+  tasks: typeof tasks;
   users: typeof users;
   workspaces: typeof workspaces;
 }>;
