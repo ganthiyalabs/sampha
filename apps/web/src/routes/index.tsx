@@ -1,7 +1,9 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
 import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { TaskList } from "@/components/dashboard/task-list";
+import { SmartTaskInput } from "@/components/dashboard/smart-task-input";
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
@@ -20,32 +22,26 @@ function HomeComponent() {
   }
 
   if (!session) {
-    // If not authenticated, redirect to login
-    // In a real app, this should probably be done in beforeLoad, but for now client-side is fine
-    // Or we could show a generic public page here if "app's mainpage" implies something else.
-    // Given the user wants "app's mainpage" and "rn / is blank", and asked for a login page, implies strict separation.
-
-    // We can't easily redirect in render without useEffect, or just render the login link.
-    // Let's perform a navigation effect.
-    setTimeout(() => router.navigate({ to: "/login" }), 0);
+    if (typeof window !== "undefined") {
+      router.navigate({ to: "/login" });
+    }
     return null;
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4">
-      <h1 className="text-2xl font-bold">Welcome, {session.user.name}</h1>
-      <p className="text-muted-foreground">Select a workspace to get started.</p>
-      {/* Placeholder for workspace selector */}
-      <div className="mt-8">
-        <Button
-          onClick={async () => {
-            await authClient.signOut();
-            router.navigate({ to: "/login" });
-          }}
-        >
-          Sign Out
-        </Button>
+    <DashboardLayout>
+      <div className="max-w-4xl mx-auto py-10 px-4 space-y-6">
+        <header className="">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Welcome back, {session.user.name?.split(" ")[0]}.
+          </h1>
+        </header>
+
+        <div className="space-y-6">
+          <SmartTaskInput />
+          <TaskList />
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
