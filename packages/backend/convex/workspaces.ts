@@ -12,31 +12,33 @@ export const list = query({
     }
 
     // Find the user in the main 'users' table by email
-    // Use the combined index and pick the most recent non-deleted user
-    const user = await ctx.db
+    const users = await ctx.db
       .query("users")
-      .withIndex("by_email_active", (q) => q.eq("email", identity.email!).eq("isDeleted", false))
-      .order("desc") // Most recent first
-      .first();
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .take(10);
+
+    const user = users.find((u) => u.isDeleted !== true);
 
     if (!user) {
       return [];
     }
 
     // Get all workspace memberships for this user
+    // Limit to 20 to prevent timeout if there's massive duplication
     const memberships = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
+      .take(20);
 
-    // Get the workspaces
-    const workspaces = await Promise.all(
-      memberships.map(async (member) => {
-        const workspace = await ctx.db.get(member.workspaceId);
-        return workspace ? { ...workspace, role: member.role } : null;
-      }),
-    );
-    return workspaces.filter((w) => w !== null);
+    // Get the workspaces sequentially to avoid any parallel overhead
+    const workspaces = [];
+    for (const member of memberships) {
+      const workspace = await ctx.db.get(member.workspaceId);
+      if (workspace) {
+        workspaces.push({ ...workspace, role: member.role });
+      }
+    }
+    return workspaces;
   },
 });
 
