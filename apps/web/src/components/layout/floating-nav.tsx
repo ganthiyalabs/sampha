@@ -13,6 +13,7 @@ import {
   Clock,
   Plus,
   Kanban,
+  Home,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -58,6 +59,11 @@ export function FloatingNav() {
   }, [session, syncUser]);
 
   const navItems: NavItem[] = [
+    {
+      title: "Home",
+      href: "/",
+      icon: Home,
+    },
     {
       title: "Timeline",
       href: `/${workspace}/timeline`,
