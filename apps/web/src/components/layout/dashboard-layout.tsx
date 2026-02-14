@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Link, useLocation, useParams } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
+import { useWorkspace } from "@/hooks/use-workspace";
 import { FloatingNav } from "./floating-nav";
 import {
   Breadcrumb,
@@ -15,8 +16,7 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const params = useParams({ strict: false }) as { workspace?: string };
-  const workspace = params.workspace;
+  const { workspace } = useWorkspace();
   const location = useLocation();
 
   // Simple Breadcrumb Logic
@@ -37,7 +37,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to={`/${workspace}`} className="flex items-center gap-2">
+                  <Link to="/$workspace" params={{ workspace }} className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-primary" />
                     {workspace}
                   </Link>
@@ -57,7 +57,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         </BreadcrumbPage>
                       ) : (
                         <BreadcrumbLink asChild>
-                          <Link to={path} className="capitalize">
+                          <Link to={path as any} className="capitalize">
                             {segment.replace(/-/g, " ")}
                           </Link>
                         </BreadcrumbLink>

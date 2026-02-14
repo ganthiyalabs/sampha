@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useWorkspace } from "@/hooks/use-workspace";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@sampha/backend/convex/_generated/api";
 import {
@@ -121,6 +122,7 @@ function parseTaskInput(text: string, projects: any[]): ParsedTask {
  */
 export function SmartTaskInput() {
   const [text, setText] = React.useState("");
+  const { workspace: workspaceSlug } = useWorkspace();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [selectedWorkspaceId, setSelectedWorkspaceId] = React.useState<string | null>(null);
   const [intel, setIntel] = React.useState<IntellisenseState>({
@@ -144,13 +146,21 @@ export function SmartTaskInput() {
   const createTask = useMutation(api.tasks.create);
   const ensureDefault = useMutation(api.projects.ensureDefaultProjectAndPhase);
 
-  // Init Workspace
+  // Sync selectedWorkspaceId with current workspace context
   React.useEffect(() => {
     const valid = workspaces?.filter((w): w is NonNullable<typeof w> => !!w) || [];
-    if (valid.length > 0 && !selectedWorkspaceId) {
-      setSelectedWorkspaceId(valid[0]._id);
+    if (valid.length > 0) {
+      // Priority 1: Current selectedWorkspaceId (if manually changed in this component session)
+      // Priority 2: Matches workspaceSlug from URL/persistence
+      // Priority 3: First valid workspace
+      const matchBySlug = valid.find(w => w.slug === workspaceSlug);
+      if (matchBySlug && selectedWorkspaceId !== matchBySlug._id) {
+        setSelectedWorkspaceId(matchBySlug._id);
+      } else if (!selectedWorkspaceId && !matchBySlug) {
+        setSelectedWorkspaceId(valid[0]._id);
+      }
     }
-  }, [workspaces, selectedWorkspaceId]);
+  }, [workspaces, workspaceSlug]);
 
   const parsed = React.useMemo(() => parseTaskInput(text, projects || []), [text, projects]);
 

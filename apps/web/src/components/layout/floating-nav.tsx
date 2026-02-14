@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Link, useLocation, useParams, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { useWorkspace } from "@/hooks/use-workspace";
 import { toast } from "sonner";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@sampha/backend/convex/_generated/api";
@@ -42,8 +43,7 @@ interface NavItem {
 
 export function FloatingNav() {
   const [isExpanded, setIsExpanded] = React.useState(false);
-  const params = useParams({ strict: false }) as { workspace?: string };
-  const workspace = params.workspace || "default";
+  const { workspace } = useWorkspace();
   const location = useLocation();
 
   const { data: session, isPending } = authClient.useSession();
@@ -127,12 +127,15 @@ export function FloatingNav() {
         {/* Navigation Items */}
         <nav className={cn("flex flex-col gap-1 mt-2", isExpanded ? "w-full" : "items-center")}>
           {navItems.map((item) => {
-            const isActive = location.pathname.startsWith(item.href);
+            const isActive = item.href === "/" 
+              ? location.pathname === "/" 
+              : location.pathname.startsWith(item.href);
             return (
               <Tooltip key={item.href} disableHoverableContent={true}>
                 <TooltipTrigger asChild>
                   <Link
                     to={item.href}
+                    activeOptions={item.href === "/" ? { exact: true } : undefined}
                     className={cn(
                       "group flex items-center gap-3 rounded-lg px-2 py-1 text-sm font-medium transition-colors hover:bg-accent/50 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground",
