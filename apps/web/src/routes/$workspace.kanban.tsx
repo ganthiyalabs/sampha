@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/kanban";
 import type { DragEndEvent } from "@dnd-kit/core";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { format, isPast, isToday } from "date-fns";
+import { Calendar as CalendarIcon, Hash } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/$workspace/kanban")({
   component: KanbanPage,
@@ -26,6 +29,15 @@ const COLUMNS = [
   { id: "done", name: "Done" },
   { id: "canceled", name: "Canceled" },
 ];
+
+interface KanbanTask extends KanbanItemProps {
+  description?: string;
+  priority?: string;
+  dueDate?: number;
+  project?: string;
+  assigneeName?: string;
+  assigneeAvatar?: string;
+}
 
 function KanbanPage() {
   const { workspace: slug } = useParams({ from: "/$workspace/kanban" });
@@ -56,11 +68,12 @@ function KanbanPage() {
           column: task.status || "backlog",
           priority: task.priority,
           description: task.description,
+          dueDate: task.dueDate,
           assigneeName: name,
           assigneeAvatar: member?.user?.avatarUrl,
         };
       });
-      setKanbanData(mappedTasks);
+      setKanbanData(mappedTasks as KanbanTask[]);
     }
   }, [tasks, members, me]);
 
@@ -142,30 +155,62 @@ function KanbanPage() {
               </div>
             </KanbanHeader>
             <KanbanCards id={column.id} className="px-2">
-              {(item) => (
-                <KanbanCard key={item.id} {...item} className="mb-2 bg-background border shadow-sm">
-                   <div className="flex flex-col gap-1.5">
-                      <span className="font-medium text-sm leading-tight">{item.name}</span>
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center gap-2">
+              {(item: KanbanTask) => (
+                <KanbanCard key={item.id} {...item} className="mb-2 bg-background border shadow-sm group hover:border-primary/50 transition-colors">
+                   <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold text-sm leading-tight group-hover:text-primary transition-colors text-foreground/90">
+                          {item.name}
+                        </span>
+                        {item.description && (
+                          <p className="text-[11px] text-muted-foreground line-clamp-2">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        {item.dueDate && (
+                          <div className={cn(
+                            "flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-tight border shadow-sm transition-all duration-300",
+                            isPast(item.dueDate) && !isToday(item.dueDate)
+                              ? "bg-rose-500/10 text-rose-500 border-rose-500/20 shadow-rose-500/5"
+                              : isToday(item.dueDate)
+                                ? "bg-indigo-500/10 text-indigo-500 border-indigo-500/20 shadow-indigo-500/5 ring-1 ring-indigo-500/10"
+                                : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20 shadow-emerald-500/5"
+                          )}>
+                            <CalendarIcon className="h-3 w-3 shrink-0" />
+                            <span>
+                              {isToday(item.dueDate) ? "Today" : format(item.dueDate, "MMM d")}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/40">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                             {typeof item.priority === 'string' && (
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded border capitalize ${
-                                    item.priority === 'high' ? 'bg-red-50 text-red-700 border-red-200' :
-                                    item.priority === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                    'bg-slate-50 text-slate-700 border-slate-200'
-                                }`}>
-                                {item.priority as string}
+                                <span className={cn(
+                                  "text-[9px] px-1.5 py-0.5 rounded-sm border uppercase font-black tracking-tighter",
+                                  item.priority === 'high' ? 'bg-red-500/10 text-red-600 border-red-500/20' :
+                                  item.priority === 'medium' ? 'bg-amber-500/10 text-amber-600 border-amber-500/20' :
+                                  'bg-blue-500/10 text-blue-600 border-blue-500/20'
+                                )}>
+                                  {item.priority}
                                 </span>
                             )}
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-sm border uppercase font-black tracking-tighter bg-muted text-muted-foreground border-border/50">
+                              {String(item.column).replace(/_/g, " ")}
+                            </span>
                         </div>
-                        <div className="flex items-center gap-1.5 max-w-[100px]">
-                            <Avatar className="h-4 w-4 border border-border/50">
-                                <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
-                                    {(item.assigneeName as string)?.substring(0, 2).toUpperCase()}
+                        <div className="flex items-center gap-1.5 overflow-hidden ml-2">
+                            <Avatar className="h-5 w-5 border border-border/50 ring-2 ring-background">
+                                <AvatarFallback className="text-[9px] bg-primary text-primary-foreground font-bold">
+                                    {item.assigneeName?.substring(0, 2).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
-                            <span className="text-[10px] text-muted-foreground font-medium truncate">
-                                {item.assigneeName as string}
+                            <span className="text-[10px] text-muted-foreground font-semibold truncate max-w-[60px]">
+                                {item.assigneeName}
                             </span>
                         </div>
                       </div>
