@@ -12,6 +12,7 @@ import {
   Layers,
   Clock,
   Plus,
+  Kanban,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -66,6 +67,11 @@ export function FloatingNav() {
       title: "Calendar",
       href: `/${workspace}/calendar`,
       icon: Calendar,
+    },
+    {
+      title: "Kanban",
+      href: `/${workspace}/kanban`,
+      icon: Kanban,
     },
     {
       title: "Inbox",
@@ -394,7 +400,7 @@ function WorkspaceSwitcher({
                 </Button>
               );
             })}
-            <div className="my-1 h-[1px] bg-border" />
+            <div className="my-1 h-px bg-border" />
             <Button
               variant="ghost"
               className="justify-start gap-2 h-9 px-2 text-sm text-muted-foreground hover:text-foreground"
