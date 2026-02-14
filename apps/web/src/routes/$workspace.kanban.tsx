@@ -13,6 +13,7 @@ import {
   type KanbanItemProps,
 } from "@/components/ui/kanban";
 import type { DragEndEvent } from "@dnd-kit/core";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const Route = createFileRoute("/$workspace/kanban")({
   component: KanbanPage,
@@ -36,21 +37,32 @@ function KanbanPage() {
   );
   
   const updateTask = useMutation((api as any).tasks.update);
+  
+  const members = useQuery(api.workspaces.listMembers, workspace ? { workspaceId: workspace._id } : "skip");
+  const me = useQuery(api.users.me);
 
   const [kanbanData, setKanbanData] = useState<KanbanItemProps[]>([]);
 
   useEffect(() => {
-    if (tasks) {
-      const mappedTasks = tasks.map((task: any) => ({
-        id: task._id,
-        name: task.title,
-        column: task.status || "backlog",
-        priority: task.priority,
-        description: task.description,
-      }));
+    if (tasks && members) {
+      const mappedTasks = tasks.map((task: any) => {
+        const assigneeRef = task.assigneeIds?.[0];
+        const member = members.find((m: any) => m.userId === assigneeRef);
+        const name = member?.user?.name || me?.name || "Unassigned";
+        
+        return {
+          id: task._id,
+          name: task.title,
+          column: task.status || "backlog",
+          priority: task.priority,
+          description: task.description,
+          assigneeName: name,
+          assigneeAvatar: member?.user?.avatarUrl,
+        };
+      });
       setKanbanData(mappedTasks);
     }
-  }, [tasks]);
+  }, [tasks, members, me]);
 
   const onDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -134,16 +146,28 @@ function KanbanPage() {
                 <KanbanCard key={item.id} {...item} className="mb-2 bg-background border shadow-sm">
                    <div className="flex flex-col gap-1.5">
                       <span className="font-medium text-sm leading-tight">{item.name}</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        {typeof item.priority === 'string' && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded border capitalize ${
-                                item.priority === 'high' ? 'bg-red-50 text-red-700 border-red-200' :
-                                item.priority === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                'bg-slate-50 text-slate-700 border-slate-200'
-                            }`}>
-                            {item.priority as string}
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-2">
+                            {typeof item.priority === 'string' && (
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded border capitalize ${
+                                    item.priority === 'high' ? 'bg-red-50 text-red-700 border-red-200' :
+                                    item.priority === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
+                                    'bg-slate-50 text-slate-700 border-slate-200'
+                                }`}>
+                                {item.priority as string}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-1.5 max-w-[100px]">
+                            <Avatar className="h-4 w-4 border border-border/50">
+                                <AvatarFallback className="text-[8px] bg-primary/10 text-primary">
+                                    {(item.assigneeName as string)?.substring(0, 2).toUpperCase()}
+                                </AvatarFallback>
+                            </Avatar>
+                            <span className="text-[10px] text-muted-foreground font-medium truncate">
+                                {item.assigneeName as string}
                             </span>
-                        )}
+                        </div>
                       </div>
                    </div>
                 </KanbanCard>
