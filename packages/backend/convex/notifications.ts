@@ -8,11 +8,12 @@ export const getUnreadCount = query({
       return 0;
     }
 
-    const user = await ctx.db
+    const users = await ctx.db
       .query("users")
-      .withIndex("by_email_active", (q) => q.eq("email", identity.email!).eq("isDeleted", false))
-      .order("desc")
-      .first();
+      .withIndex("by_email", (q) => q.eq("email", identity.email!))
+      .collect();
+
+    const user = users.find((u) => u.isDeleted !== true);
 
     if (!user) {
       return 0;

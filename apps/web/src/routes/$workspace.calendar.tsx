@@ -7,14 +7,24 @@ import { useMemo } from "react";
 
 import {
   type CalendarEvent,
+  type CalendarView,
   EventCalendar,
 } from "@/components";
 
+const VALID_VIEWS: CalendarView[] = ["month", "week", "day", "agenda"];
+
 export const Route = createFileRoute("/$workspace/calendar")({
   component: WorkspaceCalendar,
+  validateSearch: (search: Record<string, unknown>): { view?: CalendarView } => {
+    const view = typeof search.view === "string" ? (search.view as CalendarView) : undefined;
+    return {
+      view: view && VALID_VIEWS.includes(view) ? view : undefined,
+    };
+  },
 });
 
 function WorkspaceCalendar() {
+  const { view } = Route.useSearch();
   const { workspace: slug } = useParams({ from: "/$workspace/calendar" });
   
   // Fetch workspace by slug
@@ -109,6 +119,7 @@ function WorkspaceCalendar() {
     return <div className="p-6 text-muted-foreground italic">Loading workspace...</div>;
   }
 
+
   return (
     <div className="h-full">
       <EventCalendar
@@ -116,6 +127,7 @@ function WorkspaceCalendar() {
         onEventAdd={handleEventAdd}
         onEventDelete={handleEventDelete}
         onEventUpdate={handleEventUpdate}
+        initialView={view}
       />
     </div>
   );
