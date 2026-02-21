@@ -83,7 +83,7 @@ export const listMembers = query({
     const members = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .collect();
+      .take(100);
 
     // Enrich with user data
     const enrichedMembers = await Promise.all(

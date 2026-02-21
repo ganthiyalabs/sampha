@@ -38,7 +38,7 @@ export const list = query({
     return await ctx.db
       .query("users")
       .withIndex("by_isDeleted", (q) => q.eq("isDeleted", false))
-      .collect();
+      .take(500);
   },
 });
 

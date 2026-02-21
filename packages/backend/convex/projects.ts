@@ -18,7 +18,7 @@ export const list = query({
     return await ctx.db
       .query("projects")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .collect();
+      .take(500);
   },
 });
 

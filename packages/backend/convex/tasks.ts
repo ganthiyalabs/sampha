@@ -17,22 +17,46 @@ export const list = query({
     return await ctx.db
       .query("tasks")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .collect();
+      .take(1000);
   },
 });
 
 /**
- * List all tasks assigned to the current user.
+ * List all tasks assigned to the current user across their workspaces.
+ * Scoped to the user's workspace memberships and limited to prevent timeout.
  */
 export const listMyTasks = query({
   handler: async (ctx) => {
     const userId = await getAppUserIdOrNull(ctx);
     if (!userId) return [];
 
-    // Simple implementation: fetch all tasks and filter in memory
-    // In a real app with many tasks, you would use a search index or a more specialized table
-    const allTasks = await ctx.db.query("tasks").collect();
-    return allTasks.filter((task) => task.assigneeIds.includes(userId));
+    // Get user's workspace memberships (bounded set)
+    const memberships = await ctx.db
+      .query("workspaceMembers")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .take(20);
+
+    // For each workspace, fetch tasks using the indexed query
+    const allTasks: any[] = [];
+    for (const membership of memberships) {
+      const workspaceTasks = await ctx.db
+        .query("tasks")
+        .withIndex("by_workspace", (q) =>
+          q.eq("workspaceId", membership.workspaceId),
+        )
+        .take(200);
+
+      // Filter to only tasks assigned to this user
+      for (const task of workspaceTasks) {
+        if (task.assigneeIds.includes(userId)) {
+          allTasks.push(task);
+        }
+        if (allTasks.length >= 100) break;
+      }
+      if (allTasks.length >= 100) break;
+    }
+
+    return allTasks;
   },
 });
 

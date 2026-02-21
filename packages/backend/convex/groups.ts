@@ -17,7 +17,7 @@ export const list = query({
     const groups = await ctx.db
       .query("groups")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .collect();
+      .take(100);
 
     return groups.sort((a, b) => a.order - b.order);
   },
