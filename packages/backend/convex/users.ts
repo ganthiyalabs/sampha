@@ -54,14 +54,13 @@ export const syncFromAuth = mutation({
   handler: async (ctx) => {
     const authUser = await getAuthUser(ctx);
 
-    // Check if user already exists
-    // Look up by email only first, then filter for active users
-    const users = await ctx.db
+    // Check if user already exists using the compound index for efficient lookup
+    const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", authUser.email))
-      .take(10);
-
-    const existingUser = users.find((u) => u.isDeleted !== true);
+      .withIndex("by_email_active", (q) =>
+        q.eq("email", authUser.email).eq("isDeleted", false),
+      )
+      .first();
 
     if (existingUser) {
       // Update existing user

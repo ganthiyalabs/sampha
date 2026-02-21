@@ -11,13 +11,13 @@ export const list = query({
       return [];
     }
 
-    // Find the user in the main 'users' table by email
-    const users = await ctx.db
+    // Find the user in the main 'users' table by email (uses compound index for efficiency)
+    const user = await ctx.db
       .query("users")
-      .withIndex("by_email", (q) => q.eq("email", identity.email!))
-      .take(10);
-
-    const user = users.find((u) => u.isDeleted !== true);
+      .withIndex("by_email_active", (q) =>
+        q.eq("email", identity.email!).eq("isDeleted", false),
+      )
+      .first();
 
     if (!user) {
       return [];
@@ -193,7 +193,7 @@ export const remove = mutation({
     const workspaceId = args.workspaceId;
 
     // 1. Get all related entities in parallel
-    const [members, projects, notifications, githubConnections, statusConfigs, states] =
+    const [members, projects, notifications, githubConnections, groups, states] =
       await Promise.all([
         ctx.db
           .query("workspaceMembers")
@@ -212,7 +212,7 @@ export const remove = mutation({
           .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
           .collect(),
         ctx.db
-          .query("statusConfigs")
+          .query("groups")
           .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
           .collect(),
         ctx.db
@@ -227,7 +227,7 @@ export const remove = mutation({
       ...projects.map((project) => deleteProject(ctx, project._id)),
       ...notifications.map((notification) => ctx.db.delete(notification._id)),
       ...githubConnections.map((conn) => ctx.db.delete(conn._id)),
-      ...statusConfigs.map((config) => ctx.db.delete(config._id)),
+      ...groups.map((group) => ctx.db.delete(group._id)),
       ...states.map((state) => ctx.db.delete(state._id)),
     ]);
 

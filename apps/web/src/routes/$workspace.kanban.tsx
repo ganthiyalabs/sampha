@@ -15,7 +15,7 @@ import {
 import type { DragEndEvent } from "@dnd-kit/core";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { format, isPast, isToday } from "date-fns";
-import { Calendar as CalendarIcon, Plus } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -23,9 +23,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/$workspace/kanban")({
   component: KanbanPage,
@@ -57,13 +64,15 @@ function KanbanPage() {
   const { workspace: slug } = useParams({ from: "/$workspace/kanban" });
   const workspace = useQuery(api.workspaces.getBySlug, { slug });
 
-  const statusConfigs = useQuery(
-    (api as any).statusConfigs.list,
+  const groups = useQuery(
+    api.groups.list,
     workspace ? { workspaceId: workspace._id } : "skip"
   );
 
-  const seedStatuses = useMutation((api as any).statusConfigs.seed);
-  const createStatus = useMutation((api as any).statusConfigs.create);
+  const seedGroups = useMutation(api.groups.seed);
+  const createGroup = useMutation(api.groups.create);
+  const updateGroup = useMutation(api.groups.update);
+  const removeGroup = useMutation(api.groups.remove);
 
   const tasks = useQuery(
     (api as any).tasks.list,
@@ -79,32 +88,40 @@ function KanbanPage() {
   const me = useQuery(api.users.me);
 
   const [kanbanData, setKanbanData] = useState<KanbanItemProps[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [newListName, setNewListName] = useState("");
-  const [newListColor, setNewListColor] = useState(PRESET_COLORS[5]);
-  const [isCreating, setIsCreating] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupColor, setNewGroupColor] = useState(PRESET_COLORS[5]);
+  
+  const [editingGroup, setEditingGroup] = useState<any>(null);
+  const [deletingGroup, setDeletingGroup] = useState<any>(null);
+
+  const [isProcessing, setIsProcessing] = useState(false);
   const seededRef = useRef(false);
 
-  // Auto-seed default statuses on first load
+  // Auto-seed default groups on first load
   useEffect(() => {
     if (
       workspace &&
-      statusConfigs !== undefined &&
-      statusConfigs.length === 0 &&
+      groups !== undefined &&
+      groups.length === 0 &&
       !seededRef.current
     ) {
       seededRef.current = true;
-      seedStatuses({ workspaceId: workspace._id });
+      seedGroups({ workspaceId: workspace._id });
     }
-  }, [workspace, statusConfigs, seedStatuses]);
+  }, [workspace, groups, seedGroups]);
 
-  // Build columns from statusConfigs
+  // Build columns from groups
   const columns =
-    statusConfigs && statusConfigs.length > 0
-      ? statusConfigs.map((c: any) => ({
-          id: c.name.toLowerCase().replace(/\s+/g, "_"),
-          name: c.name,
-          color: c.color,
+    groups && groups.length > 0
+      ? groups.map((g: any) => ({
+          id: g.name.toLowerCase().replace(/\s+/g, "_"),
+          rawId: g._id, // Keep the actual DB ID for mutations
+          name: g.name,
+          color: g.color,
         }))
       : [];
 
@@ -161,25 +178,65 @@ function KanbanPage() {
     }
   };
 
-  const handleCreateList = async () => {
-    if (!workspace || !newListName.trim()) return;
+  const handleCreateGroup = async () => {
+    if (!workspace || !newGroupName.trim()) return;
 
-    setIsCreating(true);
+    setIsProcessing(true);
     try {
-      await createStatus({
+      await createGroup({
         workspaceId: workspace._id,
-        name: newListName.trim(),
-        color: newListColor,
+        name: newGroupName.trim(),
+        color: newGroupColor,
       });
-      toast.success(`Created "${newListName.trim()}" list`);
-      setNewListName("");
-      setNewListColor(PRESET_COLORS[5]);
-      setDialogOpen(false);
+      toast.success(`Created "${newGroupName.trim()}" group`);
+      setNewGroupName("");
+      setNewGroupColor(PRESET_COLORS[5]);
+      setCreateDialogOpen(false);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create list");
+      toast.error("Failed to create group");
     } finally {
-      setIsCreating(false);
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUpdateGroup = async () => {
+    if (!editingGroup || !newGroupName.trim()) return;
+
+    setIsProcessing(true);
+    try {
+      await updateGroup({
+        groupId: (editingGroup as any).rawId,
+        name: newGroupName.trim(),
+        color: newGroupColor,
+      });
+      toast.success(`Updated group`);
+      setEditDialogOpen(false);
+      setEditingGroup(null);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update group");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!deletingGroup) return;
+
+    setIsProcessing(true);
+    try {
+      await removeGroup({
+        groupId: (deletingGroup as any).rawId,
+      });
+      toast.success(`Deleted group and all its tasks`);
+      setDeleteDialogOpen(false);
+      setDeletingGroup(null);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete group");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -212,7 +269,7 @@ function KanbanPage() {
             key={column.id}
             className="bg-muted/30 border-none shadow-none"
           >
-            <KanbanHeader className="flex justify-between items-center px-4 py-3">
+            <KanbanHeader className="flex justify-between items-center px-4 py-3 group/header">
               <div className="flex items-center gap-2">
                 <span
                   className="h-2.5 w-2.5 rounded-full shrink-0"
@@ -223,6 +280,35 @@ function KanbanPage() {
                   {kanbanData.filter((d) => d.column === column.id).length}
                 </span>
               </div>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 transition-opacity">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => {
+                    setEditingGroup(column);
+                    setNewGroupName(column.name);
+                    setNewGroupColor((column as any).color);
+                    setEditDialogOpen(true);
+                  }}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit Group
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    variant="destructive"
+                    onClick={() => {
+                      setDeletingGroup(column);
+                      setDeleteDialogOpen(true);
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Group
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </KanbanHeader>
             <KanbanCards id={column.id} className="px-2">
               {(item: KanbanTask) => (
@@ -306,33 +392,37 @@ function KanbanPage() {
         )}
       </KanbanProvider>
 
-      {/* Add New List button — positioned after all columns */}
+      {/* Add New Group button */}
       <div className="fixed bottom-6 right-6 z-50">
         <Button
           size="icon"
-          onClick={() => setDialogOpen(true)}
+          onClick={() => {
+            setNewGroupName("");
+            setNewGroupColor(PRESET_COLORS[5]);
+            setCreateDialogOpen(true);
+          }}
           className="h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 transition-all hover:scale-105"
         >
           <Plus className="h-5 w-5" />
         </Button>
       </div>
 
-      {/* New List Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      {/* Create Group Dialog */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Create New List</DialogTitle>
+            <DialogTitle>Create New Group</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-4">
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium">Name</label>
               <Input
                 placeholder="e.g. Review, QA, Staging..."
-                value={newListName}
-                onChange={(e) => setNewListName(e.target.value)}
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && newListName.trim()) {
-                    handleCreateList();
+                  if (e.key === "Enter" && newGroupName.trim()) {
+                    handleCreateGroup();
                   }
                 }}
                 autoFocus
@@ -345,10 +435,10 @@ function KanbanPage() {
                   <button
                     key={color}
                     type="button"
-                    onClick={() => setNewListColor(color)}
+                    onClick={() => setNewGroupColor(color)}
                     className={cn(
                       "h-8 w-8 rounded-full transition-all duration-200 border-2",
-                      newListColor === color
+                      newGroupColor === color
                         ? "border-foreground scale-110 ring-2 ring-foreground/20"
                         : "border-transparent hover:scale-105 hover:border-muted-foreground/30"
                     )}
@@ -361,15 +451,101 @@ function KanbanPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setDialogOpen(false)}
+              onClick={() => setCreateDialogOpen(false)}
             >
               Cancel
             </Button>
             <Button
-              onClick={handleCreateList}
-              disabled={!newListName.trim() || isCreating}
+              onClick={handleCreateGroup}
+              disabled={!newGroupName.trim() || isProcessing}
             >
-              {isCreating ? "Creating..." : "Create List"}
+              {isProcessing ? "Creating..." : "Create Group"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Group Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Edit Group</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 py-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Name</label>
+              <Input
+                placeholder="e.g. Review, QA, Staging..."
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newGroupName.trim()) {
+                    handleUpdateGroup();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">Color</label>
+              <div className="flex flex-wrap gap-2">
+                {PRESET_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setNewGroupColor(color)}
+                    className={cn(
+                      "h-8 w-8 rounded-full transition-all duration-200 border-2",
+                      newGroupColor === color
+                        ? "border-foreground scale-110 ring-2 ring-foreground/20"
+                        : "border-transparent hover:scale-105 hover:border-muted-foreground/30"
+                    )}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateGroup}
+              disabled={!newGroupName.trim() || isProcessing}
+            >
+              {isProcessing ? "Updating..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Group Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete Group</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the group <strong>"{deletingGroup?.name}"</strong>? 
+              This will <strong className="text-destructive">permanently delete all tasks</strong> within this group.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteGroup}
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Deleting..." : "Delete Permanently"}
             </Button>
           </DialogFooter>
         </DialogContent>

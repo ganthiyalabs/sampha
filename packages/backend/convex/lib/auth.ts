@@ -52,12 +52,12 @@ export async function getAuthUserOrNull(ctx: QueryCtx | MutationCtx) {
 export async function getAppUserId(ctx: QueryCtx | MutationCtx) {
   const authUser = await getAuthUser(ctx);
 
-  const users = await ctx.db
+  const user = await ctx.db
     .query("users")
-    .withIndex("by_email", (q) => q.eq("email", authUser.email))
-    .collect();
-
-  const user = users.find((u) => u.isDeleted !== true);
+    .withIndex("by_email_active", (q) =>
+      q.eq("email", authUser.email).eq("isDeleted", false),
+    )
+    .first();
 
   if (!user) {
     throw new Error("User not found in app database. Please sync your account.");

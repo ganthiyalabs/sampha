@@ -44,14 +44,14 @@ export type KanbanItemProps = {
   column: string
 } & Record<string, unknown>
 
-export type KanbanColumnProps = {
+export type KanbanGroupProps = {
   id: string
   name: string
 } & Record<string, unknown>
 
 interface KanbanContextProps<
   T extends KanbanItemProps = KanbanItemProps,
-  C extends KanbanColumnProps = KanbanColumnProps,
+  C extends KanbanGroupProps = KanbanGroupProps,
 > {
   columns: C[]
   data: T[]
@@ -177,7 +177,7 @@ export const KanbanHeader = ({ className, ...props }: KanbanHeaderProps) => (
 
 export type KanbanProviderProps<
   T extends KanbanItemProps = KanbanItemProps,
-  C extends KanbanColumnProps = KanbanColumnProps,
+  C extends KanbanGroupProps = KanbanGroupProps,
 > = Omit<DndContextProps, "children"> & {
   children: (column: C) => ReactNode
   className?: string
@@ -191,7 +191,7 @@ export type KanbanProviderProps<
 
 export const KanbanProvider = <
   T extends KanbanItemProps = KanbanItemProps,
-  C extends KanbanColumnProps = KanbanColumnProps,
+  C extends KanbanGroupProps = KanbanGroupProps,
 >({
   children,
   onDragStart,
