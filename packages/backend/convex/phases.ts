@@ -17,7 +17,7 @@ export const list = query({
     return await ctx.db
       .query("phases")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .collect();
+      .take(100);
   },
 });
 

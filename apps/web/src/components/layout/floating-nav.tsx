@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Link, useLocation, useParams, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { useWorkspace } from "@/hooks/use-workspace";
 import { toast } from "sonner";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@sampha/backend/convex/_generated/api";
@@ -11,8 +12,9 @@ import {
   Settings,
   Layers,
   Clock,
-  Command,
   Plus,
+  Kanban,
+  Home,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -41,8 +43,7 @@ interface NavItem {
 
 export function FloatingNav() {
   const [isExpanded, setIsExpanded] = React.useState(false);
-  const params = useParams({ strict: false }) as { workspace?: string };
-  const workspace = params.workspace || "default";
+  const { workspace } = useWorkspace();
   const location = useLocation();
 
   const { data: session, isPending } = authClient.useSession();
@@ -59,6 +60,11 @@ export function FloatingNav() {
 
   const navItems: NavItem[] = [
     {
+      title: "Home",
+      href: "/",
+      icon: Home,
+    },
+    {
       title: "Timeline",
       href: `/${workspace}/timeline`,
       icon: Clock,
@@ -67,6 +73,11 @@ export function FloatingNav() {
       title: "Calendar",
       href: `/${workspace}/calendar`,
       icon: Calendar,
+    },
+    {
+      title: "Kanban",
+      href: `/${workspace}/kanban`,
+      icon: Kanban,
     },
     {
       title: "Inbox",
@@ -116,12 +127,15 @@ export function FloatingNav() {
         {/* Navigation Items */}
         <nav className={cn("flex flex-col gap-1 mt-2", isExpanded ? "w-full" : "items-center")}>
           {navItems.map((item) => {
-            const isActive = location.pathname.startsWith(item.href);
+            const isActive = item.href === "/" 
+              ? location.pathname === "/" 
+              : location.pathname.startsWith(item.href);
             return (
               <Tooltip key={item.href} disableHoverableContent={true}>
                 <TooltipTrigger asChild>
                   <Link
                     to={item.href}
+                    activeOptions={item.href === "/" ? { exact: true } : undefined}
                     className={cn(
                       "group flex items-center gap-3 rounded-lg px-2 py-1 text-sm font-medium transition-colors hover:bg-accent/50 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground",
@@ -158,30 +172,6 @@ export function FloatingNav() {
               </Tooltip>
             );
           })}
-
-          {/* Cmd+K Button - styled like other nav items */}
-          <Tooltip disableHoverableContent={true}>
-            <TooltipTrigger asChild>
-              <button
-                className={cn(
-                  "group flex items-center gap-3 rounded-lg px-2 py-1 text-sm font-medium transition-colors hover:bg-accent/50 hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring w-full",
-                  !isExpanded && "justify-center px-0 w-9 h-9",
-                  "text-muted-foreground",
-                )}
-                // onClick={() => toggleCommandPalette()} // Add your command palette toggle logic here
-              >
-                <Command
-                  className={cn("shrink-0 transition-all", isExpanded ? "h-4 w-4" : "h-5 w-5")}
-                />
-                {isExpanded && (
-                  <span className="flex-1 text-left truncate transition-all duration-300 animate-in fade-in slide-in-from-left-2">
-                    Cmd+K
-                  </span>
-                )}
-              </button>
-            </TooltipTrigger>
-            {!isExpanded && <TooltipContent side="right">Command Menu</TooltipContent>}
-          </Tooltip>
         </nav>
 
         {/* Spacer to push user profile to bottom */}
@@ -419,7 +409,7 @@ function WorkspaceSwitcher({
                 </Button>
               );
             })}
-            <div className="my-1 h-[1px] bg-border" />
+            <div className="my-1 h-px bg-border" />
             <Button
               variant="ghost"
               className="justify-start gap-2 h-9 px-2 text-sm text-muted-foreground hover:text-foreground"

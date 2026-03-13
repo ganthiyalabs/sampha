@@ -54,8 +54,9 @@ export async function getAppUserId(ctx: QueryCtx | MutationCtx) {
 
   const user = await ctx.db
     .query("users")
-    .withIndex("by_email_active", (q) => q.eq("email", authUser.email).eq("isDeleted", false))
-    .order("desc") // Most recent first
+    .withIndex("by_email_active", (q) =>
+      q.eq("email", authUser.email).eq("isDeleted", false),
+    )
     .first();
 
   if (!user) {

@@ -38,7 +38,7 @@ export const list = query({
     return await ctx.db
       .query("users")
       .withIndex("by_isDeleted", (q) => q.eq("isDeleted", false))
-      .collect();
+      .take(500);
   },
 });
 
@@ -54,12 +54,12 @@ export const syncFromAuth = mutation({
   handler: async (ctx) => {
     const authUser = await getAuthUser(ctx);
 
-    // Check if user already exists
-    // Use the combined index and pick the most recent non-deleted user
+    // Check if user already exists using the compound index for efficient lookup
     const existingUser = await ctx.db
       .query("users")
-      .withIndex("by_email_active", (q) => q.eq("email", authUser.email).eq("isDeleted", false))
-      .order("desc")
+      .withIndex("by_email_active", (q) =>
+        q.eq("email", authUser.email).eq("isDeleted", false),
+      )
       .first();
 
     if (existingUser) {

@@ -25,9 +25,11 @@
     "check": "oxlint && oxfmt --write"
   },
   "dependencies": {
+    "@dnd-kit/sortable": "^10.0.0",
     "@sampha/env": "workspace:*",
     "chrono-node": "^2.9.0",
     "dotenv": "catalog:",
+    "tunnel-rat": "^0.1.2",
     "zod": "catalog:"
   },
   "devDependencies": {

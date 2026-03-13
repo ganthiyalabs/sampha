@@ -10,8 +10,9 @@ export const getUnreadCount = query({
 
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email_active", (q) => q.eq("email", identity.email!).eq("isDeleted", false))
-      .order("desc")
+      .withIndex("by_email_active", (q) =>
+        q.eq("email", identity.email!).eq("isDeleted", false),
+      )
       .first();
 
     if (!user) {
@@ -21,7 +22,7 @@ export const getUnreadCount = query({
     const unreadNotifications = await ctx.db
       .query("notifications")
       .withIndex("by_user_unread", (q) => q.eq("userId", user._id).eq("isRead", false))
-      .collect();
+      .take(100);
 
     return unreadNotifications.length;
   },

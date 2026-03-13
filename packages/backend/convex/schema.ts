@@ -176,7 +176,7 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_github_link", ["githubLinkId"]),
 
-  statusConfigs: defineTable({
+  groups: defineTable({
     workspaceId: v.id("workspaces"),
     name: v.string(),
     order: v.number(),

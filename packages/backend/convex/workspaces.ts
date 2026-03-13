@@ -11,12 +11,12 @@ export const list = query({
       return [];
     }
 
-    // Find the user in the main 'users' table by email
-    // Use the combined index and pick the most recent non-deleted user
+    // Find the user in the main 'users' table by email (uses compound index for efficiency)
     const user = await ctx.db
       .query("users")
-      .withIndex("by_email_active", (q) => q.eq("email", identity.email!).eq("isDeleted", false))
-      .order("desc") // Most recent first
+      .withIndex("by_email_active", (q) =>
+        q.eq("email", identity.email!).eq("isDeleted", false),
+      )
       .first();
 
     if (!user) {
@@ -24,19 +24,21 @@ export const list = query({
     }
 
     // Get all workspace memberships for this user
+    // Limit to 20 to prevent timeout if there's massive duplication
     const memberships = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
+      .take(20);
 
-    // Get the workspaces
-    const workspaces = await Promise.all(
-      memberships.map(async (member) => {
-        const workspace = await ctx.db.get(member.workspaceId);
-        return workspace ? { ...workspace, role: member.role } : null;
-      }),
-    );
-    return workspaces.filter((w) => w !== null);
+    // Get the workspaces sequentially to avoid any parallel overhead
+    const workspaces = [];
+    for (const member of memberships) {
+      const workspace = await ctx.db.get(member.workspaceId);
+      if (workspace) {
+        workspaces.push({ ...workspace, role: member.role });
+      }
+    }
+    return workspaces;
   },
 });
 
@@ -81,7 +83,7 @@ export const listMembers = query({
     const members = await ctx.db
       .query("workspaceMembers")
       .withIndex("by_workspace", (q) => q.eq("workspaceId", args.workspaceId))
-      .collect();
+      .take(100);
 
     // Enrich with user data
     const enrichedMembers = await Promise.all(
@@ -191,7 +193,7 @@ export const remove = mutation({
     const workspaceId = args.workspaceId;
 
     // 1. Get all related entities in parallel
-    const [members, projects, notifications, githubConnections, statusConfigs, states] =
+    const [members, projects, notifications, githubConnections, groups, states] =
       await Promise.all([
         ctx.db
           .query("workspaceMembers")
@@ -210,7 +212,7 @@ export const remove = mutation({
           .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
           .collect(),
         ctx.db
-          .query("statusConfigs")
+          .query("groups")
           .withIndex("by_workspace", (q) => q.eq("workspaceId", workspaceId))
           .collect(),
         ctx.db
@@ -225,7 +227,7 @@ export const remove = mutation({
       ...projects.map((project) => deleteProject(ctx, project._id)),
       ...notifications.map((notification) => ctx.db.delete(notification._id)),
       ...githubConnections.map((conn) => ctx.db.delete(conn._id)),
-      ...statusConfigs.map((config) => ctx.db.delete(config._id)),
+      ...groups.map((group) => ctx.db.delete(group._id)),
       ...states.map((state) => ctx.db.delete(state._id)),
     ]);
 

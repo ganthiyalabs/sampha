@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkspaceIndexRouteImport } from './routes/$workspace.index'
 import { Route as WorkspaceTimelineRouteImport } from './routes/$workspace.timeline'
 import { Route as WorkspaceSettingsRouteImport } from './routes/$workspace.settings'
+import { Route as WorkspaceKanbanRouteImport } from './routes/$workspace.kanban'
 import { Route as WorkspaceInboxRouteImport } from './routes/$workspace.inbox'
 import { Route as WorkspaceCalendarRouteImport } from './routes/$workspace.calendar'
 import { Route as WorkspaceProjectsIndexRouteImport } from './routes/$workspace.projects.index'
@@ -53,6 +54,11 @@ const WorkspaceTimelineRoute = WorkspaceTimelineRouteImport.update({
 const WorkspaceSettingsRoute = WorkspaceSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => WorkspaceRoute,
+} as any)
+const WorkspaceKanbanRoute = WorkspaceKanbanRouteImport.update({
+  id: '/kanban',
+  path: '/kanban',
   getParentRoute: () => WorkspaceRoute,
 } as any)
 const WorkspaceInboxRoute = WorkspaceInboxRouteImport.update({
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/$workspace/calendar': typeof WorkspaceCalendarRoute
   '/$workspace/inbox': typeof WorkspaceInboxRoute
+  '/$workspace/kanban': typeof WorkspaceKanbanRoute
   '/$workspace/settings': typeof WorkspaceSettingsRoute
   '/$workspace/timeline': typeof WorkspaceTimelineRoute
   '/$workspace/': typeof WorkspaceIndexRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/$workspace/calendar': typeof WorkspaceCalendarRoute
   '/$workspace/inbox': typeof WorkspaceInboxRoute
+  '/$workspace/kanban': typeof WorkspaceKanbanRoute
   '/$workspace/settings': typeof WorkspaceSettingsRoute
   '/$workspace/timeline': typeof WorkspaceTimelineRoute
   '/$workspace': typeof WorkspaceIndexRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/$workspace/calendar': typeof WorkspaceCalendarRoute
   '/$workspace/inbox': typeof WorkspaceInboxRoute
+  '/$workspace/kanban': typeof WorkspaceKanbanRoute
   '/$workspace/settings': typeof WorkspaceSettingsRoute
   '/$workspace/timeline': typeof WorkspaceTimelineRoute
   '/$workspace/': typeof WorkspaceIndexRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/$workspace/calendar'
     | '/$workspace/inbox'
+    | '/$workspace/kanban'
     | '/$workspace/settings'
     | '/$workspace/timeline'
     | '/$workspace/'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/$workspace/calendar'
     | '/$workspace/inbox'
+    | '/$workspace/kanban'
     | '/$workspace/settings'
     | '/$workspace/timeline'
     | '/$workspace'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/$workspace/calendar'
     | '/$workspace/inbox'
+    | '/$workspace/kanban'
     | '/$workspace/settings'
     | '/$workspace/timeline'
     | '/$workspace/'
@@ -257,6 +269,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/$workspace/settings'
       preLoaderRoute: typeof WorkspaceSettingsRouteImport
+      parentRoute: typeof WorkspaceRoute
+    }
+    '/$workspace/kanban': {
+      id: '/$workspace/kanban'
+      path: '/kanban'
+      fullPath: '/$workspace/kanban'
+      preLoaderRoute: typeof WorkspaceKanbanRouteImport
       parentRoute: typeof WorkspaceRoute
     }
     '/$workspace/inbox': {
@@ -353,6 +372,7 @@ const WorkspaceProjectsProjectIdRouteWithChildren =
 interface WorkspaceRouteChildren {
   WorkspaceCalendarRoute: typeof WorkspaceCalendarRoute
   WorkspaceInboxRoute: typeof WorkspaceInboxRoute
+  WorkspaceKanbanRoute: typeof WorkspaceKanbanRoute
   WorkspaceSettingsRoute: typeof WorkspaceSettingsRoute
   WorkspaceTimelineRoute: typeof WorkspaceTimelineRoute
   WorkspaceIndexRoute: typeof WorkspaceIndexRoute
@@ -363,6 +383,7 @@ interface WorkspaceRouteChildren {
 const WorkspaceRouteChildren: WorkspaceRouteChildren = {
   WorkspaceCalendarRoute: WorkspaceCalendarRoute,
   WorkspaceInboxRoute: WorkspaceInboxRoute,
+  WorkspaceKanbanRoute: WorkspaceKanbanRoute,
   WorkspaceSettingsRoute: WorkspaceSettingsRoute,
   WorkspaceTimelineRoute: WorkspaceTimelineRoute,
   WorkspaceIndexRoute: WorkspaceIndexRoute,
